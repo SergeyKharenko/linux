@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+title: WCH CH390H/D SPI Ethernet Driver
+description: >
+  This binding documents the Device Tree interface for the Nanjing Qinheng
+  Microelectronics (WCH) CH390H and CH390D SPI to 100Mbps Ethernet controllers.
+  It applies only to the SPI-based CH390H and CH390D models.
+
+maintainers:
+  - name: WCH
+    email: tech@wch.cn
+    role: author
+  - name: Sergey Kharenko
+    email: skharenko@hust.edu.cn
+    role: maintainer
+
+compatible:
+  - wch,ch390h  # CH390H variant with optional external EEPROM
+  - wch,ch390d  # CH390D variant without external EEPROM
+
+properties:
+  required:
+    - name: reg
+      type: int
+      description: SPI chip select for the device
+    - name: spi-max-frequency
+      type: int
+      description: Maximum SPI clock frequency
+    - name: interrupt-parent
+      type: phandle
+      description: Phandle to the interrupt controller
+    - name: interrupts
+      type: list[int, int]
+      description: Interrupt number and trigger type (active-high or active-low)
+  optional:
+    - name: wch,eeprom
+      type: boolean
+      description: Enables EEPROM access for CH390H
+    - name: wakeup-gpios
+      type: phandle
+      description: GPIO for Wake-on-LAN input (optional)
+
+examples:
+  dts: |
+    &spi0 {
+        status = "okay";
+
+        ethernet@0 {
+            compatible = "wch,ch390h";
+            reg = <0>;
+            pinctrl-names = "default";
+            pinctrl-0 = <&spi0_pins &spi0_cs_pins>;
+
+            spi-max-frequency = <30000000>;
+
+            interrupt-parent = <&gpio>;
+            interrupts = <25 IRQ_TYPE_LEVEL_LOW>;
+
+            /* Optional for CH390H */
+            wch,eeprom;
+
+            /* Optional WOL GPIO */
+            wakeup-gpios = <&gpio 26 GPIO_ACTIVE_HIGH>;
+        };
+    };
+
+usage_notes:
+  - description: Check link status
+    shell: ethtool eth0
+  - description: Configure Wake-on-LAN (WOL)
+    shell: |
+      ethtool -s eth0 wol g    # enable Magic Packet
+      ethtool -s eth0 wol d    # disable WOL
+  - description: EEPROM access (CH390H only)
+    shell: |
+      # Read 128 bytes
+      ethtool -e eth0 offset 0 length 128
+
+      # Write 1 byte at offset 0x00 (requires magic)
+      ethtool -E eth0 magic 0x1A2B3C4D offset 0 length 1 value 0x12

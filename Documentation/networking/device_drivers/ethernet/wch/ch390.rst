@@ -1,0 +1,132 @@
+.. SPDX-License-Identifier: GPL-2.0-or-later
+
+====================================
+WCH CH390H/D SPI Ethernet Driver
+====================================
+
+Overview
+--------
+
+This driver provides support for the Nanjing Qinheng Microelectronics (WCH) CH390H and CH390D SPI to 100Mbps Ethernet controllers. The driver integrates with the Linux networking stack through the standard ``net_device`` interface and communicates with the hardware via the SPI protocol.
+
+Supported Devices
+-----------------
+
+This driver matches devices using the ``compatible`` string in the Device Tree.
+
+* ``wch,ch390h``: Version with support for an optional external EEPROM.
+* ``wch,ch390d``: Version without an external EEPROM.
+
+While the CH390 family includes variants with parallel interfaces (CH390L/F), **this driver exclusively supports the SPI-based CH390H and CH390D models.**
+
+Features
+--------
+
+The CH390H/D controllers provide a rich set of features, managed by this driver:
+
+* **Integrated MAC and PHY**: The chip includes an internal Ethernet Media Access Controller (MAC) and a 10/100M Physical Layer (PHY).
+* **SPI Interface**: Provides an SPI slave interface supporting modes 0 and 3, with clock speeds up to 72MHz.
+* **Checksum Offload**: Supports hardware generation and verification of checksums for IPv4 TCP/UDP and IPv6 TCP/UDP packets.
+* **Wake-on-LAN (WOL)**: Supports remote wake-up via Magic Packet events, link state changes, and specific wake-up frames.
+* **Auto-Negotiation**: Automatically negotiates for 10BASE-T/100BASE-TX connections and duplex modes.
+* **Auto-MDIX**: Automatically detects and corrects for straight-through and crossover cables.
+* **Flow Control**: Supports IEEE 802.3x flow control (Pause Frames).
+* **Built-in MAC Address**: Comes with a factory-programmed unique Ethernet MAC address, eliminating the need for an external EEPROM to store it.
+* **Optional EEPROM**: The CH390H supports an optional external EEPROM for additional configuration, which can be accessed via `ethtool`.
+
+Device Tree Configuration
+-------------------------
+
+To enable the CH390 driver on your target board, a node for the SPI device must be added to the Device Tree.
+
+Required Properties
+~~~~~~~~~~~~~~~~~~~
+
+* ``compatible``: Must be "wch,ch390h" or "wch,ch390d".
+* ``reg``: Specifies the chip select line for the SPI device.
+* ``spi-max-frequency``: Maximum frequency for the SPI clock.
+* ``interrupt-parent``: A phandle to the interrupt controller.
+* ``interrupts``: Specifies the interrupt line and trigger type used by the device. The driver supports both active-high (``IRQ_TYPE_LEVEL_HIGH``) and active-low (``IRQ_TYPE_LEVEL_LOW``) triggers.
+
+Optional Properties
+~~~~~~~~~~~~~~~~~~~
+
+* ``wch,eeprom``: A boolean property. If present, the driver will enable EEPROM access for the CH390H. This property is ignored for the CH390D.
+* ``wakeup-gpios``: Specifies the GPIO used for Wake-on-LAN. This is optional and should be set if your hardware design uses a dedicated GPIO to receive the WOL interrupt signal.
+
+Device Tree Example
+~~~~~~~~~~~~~~~~~~~~~
+
+The following is a complete configuration example for a CH390H on an SPI bus:
+
+.. code-block:: dts
+
+    /* Under your SPI controller node */
+    &spi0 {
+        status = "okay";
+
+        ethernet@0 {
+            compatible = "wch,ch390h";
+            reg = <0>; /* CS pin 0 */
+            pinctrl-names = "default";
+            pinctrl-0 = <&spi0_pins &spi0_cs_pins>;
+
+            /* Recommended SPI frequency, adjust based on hardware design */
+            spi-max-frequency = <30000000>;
+
+            /* Interrupt configuration, example is active-low */
+            interrupt-parent = <&gpio>;
+            interrupts = <25 IRQ_TYPE_LEVEL_LOW>;
+
+            /* If your board has an EEPROM (CH390H only) */
+            wch,eeprom;
+
+            /* If your board has a dedicated WOL GPIO */
+            wakeup-gpios = <&gpio 26 GPIO_ACTIVE_HIGH>;
+        };
+    };
+
+Usage and ethtool
+-----------------
+
+Once the driver is loaded successfully, a standard network interface (e.g., `eth0`) will be created. You can use standard tools like `ip` and `ethtool` for configuration and monitoring.
+
+**Check Link Status:**
+
+.. code-block:: shell
+
+   ethtool eth0
+
+**Set Wake-on-LAN (WOL):**
+
+The driver supports waking by Magic Packet (`g`) and by link status change (`p`).
+
+.. code-block:: shell
+
+   # Enable wake by Magic Packet
+   ethtool -s eth0 wol g
+
+   # Disable WOL
+   ethtool -s eth0 wol d
+
+**Read from EEPROM (CH390H only):**
+
+.. code-block:: shell
+
+   # Read the first 128 bytes of the EEPROM
+   ethtool -e eth0 offset 0 length 128
+
+**Write to EEPROM (CH390H only):**
+
+Writing to the EEPROM requires a "magic" value to prevent accidental operations.
+
+.. code-block:: shell
+
+   # To update the byte at offset 0x00 to the value 0x12
+   ethtool -E eth0 magic 0x1A2B3C4D offset 0 length 1 value 0x12
+
+Author and Maintainer
+---------------------
+
+* **Author:** WCH <tech@wch.cn>
+* **Maintainer:** Sergey Kharenko <skharenko@hust.edu.cn>

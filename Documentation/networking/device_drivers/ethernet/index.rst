@@ -63,6 +63,7 @@ Contents:
    wangxun/txgbevf
    wangxun/ngbe
    wangxun/ngbevf
+   wch/ch390
 
 .. only::  subproject and html
 
