@@ -6,6 +6,7 @@
  * CH390 100Mbps Ethernet controller.
  *
  * Copyright (C) 2024 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Copyright (C) 2026 Sergey Kharenko
  * Author:       WCH <tech@wch.cn>
  * Contributor:  Sergey Kharenko <skharenko@hust.edu.cn>
  *
@@ -14,8 +15,8 @@
  * with the Linux networking stack.
  */
 
-#ifndef _CH390_H_
-#define _CH390_H_
+#ifndef CH390_H_
+#define CH390_H_
 
 #include <linux/bitops.h>
 
@@ -272,4 +273,4 @@
 #define CH390_PKT_MAX 1536 /* Received packet max size */
 #define CH390_PKT_MIN 64
 
-#endif /* _CH390_H_ */
+#endif /* CH390_H_ */

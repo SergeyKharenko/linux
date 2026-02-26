@@ -5,6 +5,8 @@
  * Driver for the CH390H/D SPI to 100Mbps Ethernet controller.
  *
  * Copyright (C) 2024 Nanjing Qinheng Microelectronics Co., Ltd.
+ * Copyright (C) 2026 Sergey Kharenko
+ *
  * Author:       WCH <tech@wch.cn>
  * Maintainer:   Sergey Kharenko <skharenko@hust.edu.cn>
  *

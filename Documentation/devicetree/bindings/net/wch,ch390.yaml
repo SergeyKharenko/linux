@@ -6,12 +6,7 @@ description: >
   It applies only to the SPI-based CH390H and CH390D models.
 
 maintainers:
-  - name: WCH
-    email: tech@wch.cn
-    role: author
-  - name: Sergey Kharenko
-    email: skharenko@hust.edu.cn
-    role: maintainer
+  - Sergey Kharenko <skharenko@hust.edu.cn>
 
 compatible:
   - wch,ch390h  # CH390H variant with optional external EEPROM
